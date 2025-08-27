@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Friendly Chatbot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #292828; }
+        .chat-box {
+            max-width: 600px; margin: 50px auto;
+            background: white; border-radius: 12px; padding: 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .bot { background: #f1f1f1; padding: 10px 15px; border-radius: 15px; margin-bottom: 10px; }
+        .user { background: #007bff; color: white; padding: 10px 15px; border-radius: 15px; text-align: right; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="chat-box">
+        <h4 class="text-center mb-3">🤖Chatbot</h4>
+        <div id="chat-window"></div>
+
+        <div class="input-group mt-3">
+            <input type="text" id="answer" class="form-control" placeholder="Type a message" autofocus>
+            <button class="btn btn-primary" onclick="sendAnswer()">Send</button>
+        </div>
+
+        <div id="download-section" class="text-center mt-3" style="display: none;">
+            <a href="/download_report" class="btn btn-success">📄 Download Report</a>
+        </div>
+
+        <button id="reset-btn" class="btn btn-danger mt-3">Reset</button>
+    </div>
+
+    <script>
+        let currentId = null;
+
+        async function getQuestion() {
+            const res = await fetch("/get_question");
+            const data = await res.json();
+            if (data.done) {
+                document.getElementById("chat-window").innerHTML +=
+                  `<div class='bot'>✅ Thanks! Your profile is ready.</div>`;
+                document.getElementById("download-section").style.display = "block";
+                document.getElementById("answer").disabled = true;
+            } else {
+                currentId = data.id;
+                document.getElementById("chat-window").innerHTML +=
+                  `<div class='bot'>${data.question}</div>`;
+            }
+        }
+
+        async function sendAnswer() {
+            let ans = document.getElementById("answer").value;
+            if (!ans.trim()) return;
+
+            document.getElementById("chat-window").innerHTML +=
+              `<div class='user'>${ans}</div>`;
+            document.getElementById("answer").value = "";
+
+            await fetch("/submit_answer", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: currentId, answer: ans })
+            });
+
+            setTimeout(getQuestion, 1000);
+        }
+
+        document.getElementById("reset-btn").onclick = function() {
+            fetch("/reset", {method: "POST"})
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Optionally reload page or reset chat UI
+                        location.reload();
+                    }
+                });
+        };
+
+        // Start the conversation
+        getQuestion();
+    </script>
+</body>
+</html>
