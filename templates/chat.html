@@ -53,18 +53,42 @@
             let ans = document.getElementById("answer").value;
             if (!ans.trim()) return;
 
-            document.getElementById("chat-window").innerHTML +=
-              `<div class='user'>${ans}</div>`;
-            document.getElementById("answer").value = "";
-
-            await fetch("/submit_answer", {
+            const res = await fetch("/submit_answer", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id: currentId, answer: ans })
             });
 
-            setTimeout(getQuestion, 1000);
+            const data = await res.json();
+
+            if (!data.success) {
+                document.getElementById("chat-window").innerHTML +=
+                    `<div class='bot text-danger'>⚠️ ${data.error}</div>`;
+                return; 
+            }
+
+            document.getElementById("chat-window").innerHTML +=
+              `<div class='user'>${ans}</div>`;
+            document.getElementById("answer").value = "";
+
+            setTimeout(getQuestion, 500);
         }
+        document.getElementById("answer").addEventListener("input", function () {
+            let chatWindow = document.getElementById("chat-window");
+            let errorMessages = chatWindow.querySelectorAll(".text-danger");
+
+            if (errorMessages.length > 0) {
+                errorMessages.forEach(err => err.remove());
+            }
+        });
+
+
+        document.getElementById("answer").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault(); // stop newline
+                sendAnswer();
+            }
+        });
 
         document.getElementById("reset-btn").onclick = function() {
             fetch("/reset", {method: "POST"})

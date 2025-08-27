@@ -11,7 +11,7 @@ QUESTIONS = [
     {"id": "skills", "text": "Awesome! What skills are you most confident in?"},
     {"id": "type", "text": "How do you like to work?"},
     {"id": "exp", "text": "How many years of experience do you have?"},
-    {"id": "contact", "text": "Finally, how can we reach you (email is fine)?"},
+    {"id": "contact", "text": "please enter your email id?"},
 ]
 
 user_data = {}
@@ -43,10 +43,22 @@ def submit_answer():
     global current_index, user_data
     data = request.get_json()
     qid = data.get("id")
-    answer = data.get("answer")
+    answer = data.get("answer","").strip()
+
+
+    if qid == "name" and not answer.isalpha():
+        return jsonify({"success": False, "error": "Name should only contain letters."})
+    if qid == "role" and not answer.isalpha():
+        return jsonify({"success": False, "error": "should only contain letters."})
+    if qid == "exp":
+        if not answer.isdigit():
+            return jsonify({"success": False, "error": "Experience must be a number."})
+
+    if qid == "contact" and "@" not in answer:
+        return jsonify({"success": False, "error": "Please provide a valid email address."})
     if qid:
         user_data[qid] = answer
-    current_index += 1
+        current_index += 1
     return jsonify({"success": True})
 
 
@@ -57,7 +69,7 @@ def download_report():
     report = f"User Profile Report\nGenerated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
     for q in QUESTIONS:
         answer = user_data.get(q["id"], "Not answered")
-        report += f"{q['text']}\n→ {answer}\n\n"
+        report += f"{q['text']}\nAnswer: {answer}\n\n"
 
     # Return as downloadable text file
     buffer = io.BytesIO()
