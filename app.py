@@ -25,13 +25,14 @@ def index():
 
 @app.route("/get_question", methods=["GET"])
 def get_question():
-    global current_index
+    global current_index, user_data
     if current_index < len(QUESTIONS):
-        if QUESTIONS[current_index]["id"] =="role" and "name" in user_data:
-            QUESTIONS[current_index]["text"] = f"Hi {user_data['name']}, " + QUESTIONS[current_index]["text"]
+        question = QUESTIONS[current_index]["text"]
+        if QUESTIONS[current_index]["id"] == "role" and "name" in user_data:
+            question = f"Hi {user_data['name']}, {question[0].lower() + question[1:]}"
         return jsonify({
             "done": False,
-            "question": QUESTIONS[current_index]["text"],
+            "question": question,
             "id": QUESTIONS[current_index]["id"]
         })
     else:
