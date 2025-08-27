@@ -4,7 +4,7 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# Friendly chatbot questions
+
 QUESTIONS = [
     {"id": "name", "text": "What's your name?"},
     {"id": "role", "text": "What is your current role?"},
